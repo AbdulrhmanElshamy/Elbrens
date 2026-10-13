@@ -113,8 +113,8 @@ const products = menuGroups.flatMap(group => group.items.map(([name,prices,desc]
     price:variants[0].price,details:desc || '',desc:desc || (prices === null ? 'السعر حسب الوزن — يتم تأكيده مع المطعم.' :
       variants.length>1 ? variants.map(v=>`${v.label}: ${v.price} ج.م`).join(' • ') : group.id==='settlement' ? 'خدمة تسوية' : group.name)};
 }));
-const categories = [['all',menuPhotos.grill,'كل المنيو'],...menuGroups.map(g=>[g.id,menuPhotos[g.photo],g.name])];
-let activeCat='all', activeFilter='all', searchTerm='', cart=[];
+const categories = menuGroups.map(g=>[g.id,menuPhotos[g.photo],g.name]);
+let activeCat='meals', searchTerm='', cart=[];
 let selectedProduct=null, selectedVariant=0, previousFocus=null, toastTimer;
 const eg=n=>new Intl.NumberFormat('ar-EG').format(n)+' ج.م';
 const number=n=>new Intl.NumberFormat('ar-EG').format(n);
@@ -126,32 +126,26 @@ function productCard(p) {
 }
 function renderCategories() {
   document.getElementById('categories').innerHTML=categories.map(([id,image,name])=>{
-    const count=id==='all'?products.length:products.filter(p=>p.cat===id).length;
+    const count=products.filter(p=>p.cat===id).length;
     return `<li><button class="category ${activeCat===id?'active':''}" aria-pressed="${activeCat===id}" onclick="setCategory('${id}')"><span>${name}</span><span class="category-count">${number(count)}</span></button></li>`;
   }).join('');
 }
 function renderProducts() {
-  let list=products.filter(p=>activeCat==='all'||p.cat===activeCat);
-  if(activeFilter!=='all')list=list.filter(p=>p.cat===activeFilter);
+  let list=products.filter(p=>p.cat===activeCat);
   const query=normalize(searchTerm.trim());
   if(query)list=list.filter(p=>normalize(p.name+' '+p.badge+' '+p.details).includes(query));
-  const title=activeFilter==='meals'?'وجبات فردية':activeFilter==='trays'?'صواني اللمة':categories.find(c=>c[0]===activeCat)[2];
+  const title=categories.find(c=>c[0]===activeCat)[2];
   document.getElementById('menuTitle').innerHTML=`${title} <span>${number(list.length)} صنف</span>`;
   document.getElementById('menuGrid').innerHTML=menuGroups.map(g=>{
     const items=list.filter(p=>p.cat===g.id);
     if(!items.length)return '';
     const note=g.id==='grill'?'اختار الوزن المناسب ليك':g.id==='pizza'||g.id==='savory-pastry'?'كل حجم بسعره':g.id==='settlement'?'خدمة التسوية للأكل الخاص بيك':`${number(items.length)} صنف على مزاجك`;
     return `<section class="menu-group" aria-labelledby="heading-${g.id}"><div class="menu-group-heading"><img class="menu-group-photo" loading="lazy" src="${menuPhotos[g.photo]}" alt=""><div><h3 id="heading-${g.id}">${g.name}</h3><p>${note}</p></div><span class="menu-group-rule" aria-hidden="true"></span></div><div class="group-items">${items.map(productCard).join('')}</div></section>`;
-  }).join('')||`<div class="menu-empty"><h3>مش لاقيين الصنف ده</h3><p>جرّب اسم تاني أو ارجع لكل الأصناف.</p><button class="primary" onclick="resetMenu()">عرض كل المنيو</button></div>`;
-}
-function updateFilters() {
-  document.querySelectorAll('.filter').forEach(b=>{
-    const active=b.dataset.filter===activeFilter;
-    b.classList.toggle('active',active);b.setAttribute('aria-pressed',active);
-  });
+  }).join('')||`<div class="menu-empty"><h3>مش لاقيين الصنف ده في القسم</h3><p>جرّب اسم تاني أو اختار قسم مختلف.</p><button class="primary" onclick="resetMenu()">عرض أصناف القسم</button></div>`;
 }
 function setCategory(cat) {
-  activeCat=cat;activeFilter='all';updateFilters();renderCategories();renderProducts();
+  if(!categories.some(c=>c[0]===cat))return;
+  activeCat=cat;searchTerm='';document.getElementById('menuSearch').value='';renderCategories();renderProducts();
   const categoryButton=document.querySelector('.category.active');
   categoryButton?.focus({preventScroll:true});
   categoryButton?.scrollIntoView({behavior:motionBehavior(),block:'nearest',inline:'nearest'});
@@ -159,12 +153,9 @@ function setCategory(cat) {
 }
 function searchMenu(value) {searchTerm=value;renderProducts();}
 function resetMenu() {
-  activeCat='all';activeFilter='all';searchTerm='';document.getElementById('menuSearch').value='';
-  updateFilters();renderCategories();renderProducts();
+  searchTerm='';document.getElementById('menuSearch').value='';
+  renderProducts();
 }
-document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
-  activeFilter=btn.dataset.filter;activeCat='all';updateFilters();renderCategories();renderProducts();
-}));
 function motionBehavior(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';}
 function openProduct(id) {
   const p=products.find(x=>x.id===id);if(!p)return;

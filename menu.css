@@ -44,6 +44,7 @@ main { padding:40px 0 80px; }
 .menu-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:18px; margin-bottom:24px; border-bottom:1px solid var(--line); }
 .menu-toolbar h3 { font-size:15px; margin:0; }
 .menu-toolbar h3 span { color:var(--muted); font-size:12px; font-weight:500; display:inline-block; margin-right:6px; }
+.menu-section-hint { color:var(--muted); font-size:12px; }
 .filter-row { gap:7px; }
 .filter { min-height:44px; font-size:12px; background:white; border-radius:7px; padding:8px 12px; }
 .filter.active { background:var(--red); border-color:var(--red); }
